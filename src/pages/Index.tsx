@@ -1,11 +1,47 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import Countdown from "@/components/Countdown";
 
 const Index = () => {
+  const objetivos = [
+    "Aprender uma nova linguagem de programação",
+    "Praticar exercícios físicos regularmente",
+    "Ler 12 livros",
+    "Economizar 20% do salário mensalmente",
+    "Melhorar o inglês"
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Meus Objetivos para o Ano
+          </h1>
+          <p className="text-xl text-gray-600">
+            Tempo restante para alcançar minhas metas
+          </p>
+        </div>
+
+        <Countdown />
+
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            Objetivos a Conquistar
+          </h2>
+          <ul className="space-y-4">
+            {objetivos.map((objetivo, index) => (
+              <li
+                key={index}
+                className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <span className="h-8 w-8 flex items-center justify-center bg-primary text-white rounded-full mr-3">
+                  {index + 1}
+                </span>
+                <span className="text-gray-800">{objetivo}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
