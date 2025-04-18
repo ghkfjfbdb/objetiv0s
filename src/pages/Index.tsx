@@ -3,11 +3,11 @@ import Countdown from "@/components/Countdown";
 
 const Index = () => {
   const objetivos = [
-    "Aprender uma nova linguagem de programação",
-    "Praticar exercícios físicos regularmente",
-    "Ler 12 livros",
-    "Economizar 20% do salário mensalmente",
-    "Melhorar o inglês"
+    "Aprender Unity e C# para desenvolvimento de jogos",
+    "Criar 3 protótipos de jogos simples",
+    "Desenvolver habilidades em design de jogos",
+    "Participar de uma game jam",
+    "Publicar meu primeiro jogo na Steam"
   ];
 
   return (
