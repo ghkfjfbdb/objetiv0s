@@ -1,74 +1,87 @@
 
-import { useEffect, useState } from "react";
-import { Card } from "./ui/card";
+import React, { useState, useEffect } from "react";
 
 const Countdown = () => {
   const [timeLeft, setTimeLeft] = useState({
-    days: 365,
+    days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.days === 0 && prev.hours === 0 && prev.minutes === 0 && prev.seconds === 0) {
-          clearInterval(timer);
-          return prev;
-        }
+    // Data alvo: 31 de dezembro do ano atual
+    const now = new Date();
+    const targetDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
 
-        let newSeconds = prev.seconds - 1;
-        let newMinutes = prev.minutes;
-        let newHours = prev.hours;
-        let newDays = prev.days;
+    const updateCountdown = () => {
+      const currentTime = new Date();
+      const difference = targetDate.getTime() - currentTime.getTime();
 
-        if (newSeconds < 0) {
-          newSeconds = 59;
-          newMinutes--;
-        }
-        if (newMinutes < 0) {
-          newMinutes = 59;
-          newHours--;
-        }
-        if (newHours < 0) {
-          newHours = 23;
-          newDays--;
-        }
+      if (difference <= 0) {
+        // Se já passou do prazo, configura para o ano seguinte
+        const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59, 59);
+        const newDifference = nextYear.getTime() - currentTime.getTime();
 
-        return {
-          days: newDays,
-          hours: newHours,
-          minutes: newMinutes,
-          seconds: newSeconds,
-        };
-      });
-    }, 1000);
+        const days = Math.floor(newDifference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (newDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+          (newDifference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+        const seconds = Math.floor((newDifference % (1000 * 60)) / 1000);
 
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+          (difference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ days, hours, minutes, seconds });
+      }
+    };
+
+    // Atualiza o countdown imediatamente
+    updateCountdown();
+
+    // Atualiza o countdown a cada segundo
+    const timer = setInterval(updateCountdown, 1000);
+
+    // Limpa o intervalo quando o componente é desmontado
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <Card className="p-6 bg-white shadow-lg">
+    <div className="bg-white shadow rounded-lg p-6">
       <div className="grid grid-cols-4 gap-4 text-center">
         <div className="flex flex-col">
-          <span className="text-4xl font-bold text-primary">{timeLeft.days}</span>
-          <span className="text-sm text-gray-600">Dias</span>
+          <div className="text-4xl font-bold text-primary">{timeLeft.days}</div>
+          <div className="text-gray-600">Dias</div>
         </div>
         <div className="flex flex-col">
-          <span className="text-4xl font-bold text-primary">{timeLeft.hours}</span>
-          <span className="text-sm text-gray-600">Horas</span>
+          <div className="text-4xl font-bold text-primary">{timeLeft.hours}</div>
+          <div className="text-gray-600">Horas</div>
         </div>
         <div className="flex flex-col">
-          <span className="text-4xl font-bold text-primary">{timeLeft.minutes}</span>
-          <span className="text-sm text-gray-600">Minutos</span>
+          <div className="text-4xl font-bold text-primary">
+            {timeLeft.minutes}
+          </div>
+          <div className="text-gray-600">Minutos</div>
         </div>
         <div className="flex flex-col">
-          <span className="text-4xl font-bold text-primary">{timeLeft.seconds}</span>
-          <span className="text-sm text-gray-600">Segundos</span>
+          <div className="text-4xl font-bold text-primary">
+            {timeLeft.seconds}
+          </div>
+          <div className="text-gray-600">Segundos</div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
