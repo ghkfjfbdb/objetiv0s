@@ -1,8 +1,46 @@
+
+import { useState } from "react";
 import Countdown from "@/components/Countdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Copyright } from "lucide-react";
 
+const PixelNeymar = () => (
+  <div className="flex justify-center py-4 animate-fade-in">
+    {/* Uma versão pixel art do Neymar: */}
+    <svg
+      width="120"
+      height="120"
+      viewBox="0 0 30 30"
+      style={{ imageRendering: "pixelated" }}
+      className="border border-gray-400 rounded bg-gray-100 shadow-lg"
+    >
+      {/* Cabelo (amarelo e castanho) */}
+      <rect x="10" y="2" width="10" height="4" fill="#efd81e" />
+      <rect x="9" y="6" width="12" height="3" fill="#774d27" />
+      {/* Rosto */}
+      <rect x="10" y="9" width="10" height="7" fill="#f9e0b7" />
+      {/* Camisa (PSG azul) */}
+      <rect x="8" y="16" width="14" height="4" fill="#202f61" />
+      {/* Shorts */}
+      <rect x="11" y="20" width="3" height="4" fill="#202f61" />
+      <rect x="16" y="20" width="3" height="4" fill="#202f61" />
+      {/* Pernas */}
+      <rect x="11" y="24" width="3" height="3" fill="#fbf6ee" />
+      <rect x="16" y="24" width="3" height="3" fill="#fbf6ee" />
+      {/* Olhos */}
+      <rect x="12" y="11" width="1" height="1" fill="#222" />
+      <rect x="17" y="11" width="1" height="1" fill="#222" />
+      {/* Boca */}
+      <rect x="14" y="14" width="2" height="1" fill="#b77b4a" />
+      {/* Sombra camisa (detalhe vermelho) */}
+      <rect x="12" y="18" width="6" height="1" fill="#c72b29" />
+    </svg>
+  </div>
+);
+
 const Index = () => {
+  const [showModal, setShowModal] = useState(false);
+
   const objetivos = [
     {
       titulo: "Aprender Unity e C# para desenvolvimento de jogos",
@@ -27,7 +65,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -81,9 +119,37 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Botão "não clique" */}
+        <div className="w-full flex justify-center pt-8">
+          <button
+            className="bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg text-lg font-bold hover:bg-red-700 transition-all animate-bounce"
+            onClick={() => setShowModal(true)}
+          >
+            não clique
+          </button>
+        </div>
       </div>
+
+      {/* Modal Pixel Neymar */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-lg max-w-sm mx-auto p-6 text-center relative flex flex-col items-center">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 rounded-full px-2 py-1 text-sm font-bold text-gray-600"
+            >
+              X
+            </button>
+            <h3 className="font-bold text-xl mb-2 text-gray-700 animate-fade-in">NEYMAR PIXEL ART</h3>
+            <PixelNeymar />
+            <span className="mt-2 text-sm text-gray-600">😱 Você clicou!</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Index;
+
