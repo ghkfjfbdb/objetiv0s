@@ -1,6 +1,6 @@
-
 import Countdown from "@/components/Countdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Copyright } from "lucide-react";
 
 const Index = () => {
   const objetivos = [
@@ -61,6 +61,25 @@ const Index = () => {
               </Popover>
             ))}
           </ul>
+        </div>
+
+        {/* Credits Section */}
+        <div className="bg-white shadow rounded-lg p-6 text-center">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            Créditos
+          </h2>
+          <div className="flex flex-col items-center space-y-4">
+            <div className="flex items-center space-x-2 text-gray-700">
+              <Copyright size={20} />
+              <span>Dedicado ao MESTRE R</span>
+            </div>
+            <p className="text-sm text-gray-600">
+              Homenagem ao melhor aluno do Buiu 🏆
+            </p>
+            <div className="text-xs text-gray-500 mt-2">
+              © {new Date().getFullYear()} Objetivos Project
+            </div>
+          </div>
         </div>
       </div>
     </div>
