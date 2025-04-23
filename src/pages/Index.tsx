@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Countdown from "@/components/Countdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Copyright } from "lucide-react";
+import { Copyright, Moon, Sun } from "lucide-react";
 import { useAudio } from "@/hooks/useAudio";
+import { Toggle } from "@/components/ui/toggle";
+import { useTheme } from "next-themes";
 
 const LulaImage = () => (
   <div className="flex justify-center py-4 animate-fade-in">
@@ -47,6 +49,7 @@ const PixelBolsonaro = () => (
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
   const { playSound } = useAudio('lula-feijao-puro.mp3');
+  const { theme, setTheme } = useTheme();
 
   const objetivos = [
     {
@@ -77,36 +80,50 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 right-4">
+        <Toggle
+          aria-label="Toggle theme"
+          pressed={theme === "dark"}
+          onPressedChange={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          {theme === "dark" ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
+        </Toggle>
+      </div>
+
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
             Meus Objetivos para o Ano
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-muted-foreground">
             Tempo restante para alcançar minhas metas
           </p>
         </div>
 
         <Countdown />
 
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+        <div className="bg-card shadow rounded-lg p-6">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">
             Objetivos a Conquistar
           </h2>
           <ul className="space-y-4">
             {objetivos.map((objetivo, index) => (
               <Popover key={index}>
                 <PopoverTrigger asChild>
-                  <li className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                    <span className="h-8 w-8 flex items-center justify-center bg-primary text-white rounded-full mr-3">
+                  <li className="flex items-center p-3 bg-muted rounded-lg hover:bg-accent transition-colors cursor-pointer">
+                    <span className="h-8 w-8 flex items-center justify-center bg-primary text-primary-foreground rounded-full mr-3">
                       {index + 1}
                     </span>
-                    <span className="text-gray-800">{objetivo.titulo}</span>
+                    <span className="text-foreground">{objetivo.titulo}</span>
                   </li>
                 </PopoverTrigger>
                 <PopoverContent className="w-72">
-                  <p className="text-sm text-gray-600">{objetivo.descricao}</p>
+                  <p className="text-sm text-muted-foreground">{objetivo.descricao}</p>
                 </PopoverContent>
               </Popover>
             ))}
@@ -114,19 +131,19 @@ const Index = () => {
         </div>
 
         {/* Credits Section */}
-        <div className="bg-white shadow rounded-lg p-6 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+        <div className="bg-card shadow rounded-lg p-6 text-center">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">
             Créditos
           </h2>
           <div className="flex flex-col items-center space-y-4">
-            <div className="flex items-center space-x-2 text-gray-700">
+            <div className="flex items-center space-x-2 text-muted-foreground">
               <Copyright size={20} />
               <span>Dedicado ao MESTRE R</span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Homenagem ao melhor aluno do Buiu 🏆
             </p>
-            <div className="text-xs text-gray-500 mt-2">
+            <div className="text-xs text-muted-foreground mt-2">
               © {new Date().getFullYear()} Objetivos Project
             </div>
           </div>
@@ -135,7 +152,7 @@ const Index = () => {
         {/* Botão "não clique" */}
         <div className="w-full flex justify-center pt-8">
           <button
-            className="bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg text-lg font-bold hover:bg-red-700 transition-all animate-bounce"
+            className="bg-destructive text-destructive-foreground px-6 py-3 rounded-lg shadow-lg text-lg font-bold hover:bg-destructive/90 transition-all animate-bounce"
             onClick={handleButtonClick}
           >
             não clique
@@ -145,17 +162,17 @@ const Index = () => {
 
       {/* Modal Lula */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-in">
-          <div className="bg-white rounded-lg shadow-lg max-w-sm mx-auto p-6 text-center relative flex flex-col items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card rounded-lg shadow-lg max-w-sm mx-auto p-6 text-center relative flex flex-col items-center">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 rounded-full px-2 py-1 text-sm font-bold text-gray-600"
+              className="absolute top-2 right-2 bg-muted hover:bg-muted/90 rounded-full px-2 py-1 text-sm font-bold text-muted-foreground"
             >
               X
             </button>
-            <h3 className="font-bold text-xl mb-2 text-gray-700 animate-fade-in">LULA NO SKATE</h3>
+            <h3 className="font-bold text-xl mb-2 text-foreground animate-fade-in">LULA NO SKATE</h3>
             <LulaImage />
-            <span className="mt-2 text-sm text-gray-600">😱 Você clicou!</span>
+            <span className="mt-2 text-sm text-muted-foreground">😱 Você clicou!</span>
           </div>
         </div>
       )}
