@@ -3,6 +3,16 @@ import Countdown from "@/components/Countdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Copyright } from "lucide-react";
 
+const LulaImage = () => (
+  <div className="flex justify-center py-4 animate-fade-in">
+    <img 
+      src="/lovable-uploads/7c820656-05d9-44a6-9e6f-30eb9d1d0dfb.png" 
+      alt="Lula não andando de skate"
+      className="max-w-[300px] rounded-lg shadow-lg"
+    />
+  </div>
+);
+
 const PixelBolsonaro = () => (
   <div className="flex justify-center py-4 animate-fade-in">
     {/* Pixel art do Bolsonaro */}
@@ -126,7 +136,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Modal Pixel Bolsonaro */}
+      {/* Modal Lula */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-in">
           <div className="bg-white rounded-lg shadow-lg max-w-sm mx-auto p-6 text-center relative flex flex-col items-center">
@@ -136,8 +146,8 @@ const Index = () => {
             >
               X
             </button>
-            <h3 className="font-bold text-xl mb-2 text-gray-700 animate-fade-in">BOLSONARO PIXEL ART</h3>
-            <PixelBolsonaro />
+            <h3 className="font-bold text-xl mb-2 text-gray-700 animate-fade-in">LULA NO SKATE</h3>
+            <LulaImage />
             <span className="mt-2 text-sm text-gray-600">😱 Você clicou!</span>
           </div>
         </div>
