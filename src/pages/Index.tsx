@@ -2,6 +2,7 @@ import { useState } from "react";
 import Countdown from "@/components/Countdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Copyright } from "lucide-react";
+import { useAudio } from "@/hooks/useAudio";
 
 const LulaImage = () => (
   <div className="flex justify-center py-4 animate-fade-in">
@@ -45,6 +46,7 @@ const PixelBolsonaro = () => (
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
+  const { playSound } = useAudio('/path-to-your-sound-file.mp3');
 
   const objetivos = [
     {
@@ -68,6 +70,11 @@ const Index = () => {
       descricao: "Finalizar e publicar um jogo completo na plataforma Steam, aprendendo sobre o processo de distribuição."
     }
   ];
+
+  const handleButtonClick = () => {
+    playSound();
+    setShowModal(true);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
@@ -129,7 +136,7 @@ const Index = () => {
         <div className="w-full flex justify-center pt-8">
           <button
             className="bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg text-lg font-bold hover:bg-red-700 transition-all animate-bounce"
-            onClick={() => setShowModal(true)}
+            onClick={handleButtonClick}
           >
             não clique
           </button>
