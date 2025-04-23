@@ -46,7 +46,7 @@ const PixelBolsonaro = () => (
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  const { playSound } = useAudio('/lovable-uploads/lula-feijao-puro.mp3');
+  const { playSound } = useAudio('lula-feijao-puro.mp3');
 
   const objetivos = [
     {
