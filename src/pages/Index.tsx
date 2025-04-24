@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import Countdown from "@/components/Countdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Copyright, Moon, Sun } from "lucide-react";
@@ -50,6 +51,12 @@ const Index = () => {
   const [showModal, setShowModal] = useState(false);
   const { playSound } = useAudio('lula-feijao-puro.mp3');
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Only show the toggle after mounting to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const objetivos = [
     {
@@ -79,19 +86,23 @@ const Index = () => {
     setShowModal(true);
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 relative">
       <div className="absolute top-4 right-4">
         <Toggle
           aria-label="Toggle theme"
           pressed={theme === "dark"}
-          onPressedChange={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onPressedChange={toggleTheme}
         >
-          {theme === "dark" ? (
+          {mounted && (theme === "dark" ? (
             <Sun className="h-5 w-5" />
           ) : (
             <Moon className="h-5 w-5" />
-          )}
+          ))}
         </Toggle>
       </div>
 
