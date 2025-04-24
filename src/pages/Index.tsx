@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Countdown from "@/components/Countdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -6,6 +5,7 @@ import { Copyright, Moon, Sun } from "lucide-react";
 import { useAudio } from "@/hooks/useAudio";
 import { Toggle } from "@/components/ui/toggle";
 import { useTheme } from "next-themes";
+import { toast } from "@/components/ui/use-toast";
 
 const LulaImage = () => (
   <div className="flex justify-center py-4 animate-fade-in">
@@ -49,7 +49,7 @@ const PixelBolsonaro = () => (
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  const { playSound } = useAudio('lula-feijao-puro.mp3');
+  const { playSound, isLoaded, error } = useAudio('/lula-feijao-puro.mp3');
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -57,6 +57,17 @@ const Index = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Show error toast if audio fails to load
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Erro de áudio",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  }, [error]);
 
   const objetivos = [
     {
@@ -82,6 +93,7 @@ const Index = () => {
   ];
 
   const handleButtonClick = () => {
+    console.log("Button clicked, attempting to play audio...");
     playSound();
     setShowModal(true);
   };
