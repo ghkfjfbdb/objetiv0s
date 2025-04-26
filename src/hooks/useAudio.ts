@@ -1,94 +1,152 @@
 
 import { useCallback, useRef, useState, useEffect } from 'react';
+import { checkAudioFileExists } from '@/utils/audioChecker';
 
 export const useAudio = (audioUrl: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [fileExists, setFileExists] = useState<boolean | null>(null);
 
+  // Check if the file exists
   useEffect(() => {
-    // Create the audio element on mount
-    const audio = new Audio();
-    audioRef.current = audio;
+    const checkFile = async () => {
+      console.log("Checking if audio file exists:", audioUrl);
+      const exists = await checkAudioFileExists(audioUrl);
+      console.log("Audio file exists:", exists);
+      setFileExists(exists);
+      
+      if (!exists) {
+        setError(`Audio file not found: ${audioUrl}`);
+        setIsLoaded(false);
+      }
+    };
+    
+    checkFile();
+  }, [audioUrl, retryCount]);
+
+  // Initialize the audio element outside of useEffect to ensure it's available
+  useEffect(() => {
+    if (fileExists === false) {
+      return; // Don't try to load if file doesn't exist
+    }
+
+    // Create audio element
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+    }
+    
+    const audio = audioRef.current;
+    
+    // Clear previous errors on new URL
+    setError(null);
     
     // Set up event listeners
     const handleCanPlay = () => {
-      console.log("Audio can now be played:", audioUrl);
+      console.log("Audio loaded successfully:", audioUrl);
       setIsLoaded(true);
       setError(null);
     };
     
-    const handleError = (e: Event) => {
-      console.error('Audio load error:', e);
+    const handleError = () => {
+      // Get the specific error if available
+      const errorMessage = audio.error 
+        ? `Error code: ${audio.error.code}, message: ${audio.error.message}` 
+        : 'Unknown error';
+      console.error('Audio load error:', errorMessage);
       setError(`Failed to load audio: ${audioUrl}`);
       setIsLoaded(false);
     };
     
+    // Add event listeners
     audio.addEventListener('canplaythrough', handleCanPlay);
     audio.addEventListener('error', handleError);
     
-    // Set source and load the audio
+    // Set source with correct path
     audio.src = audioUrl;
-    audio.load();
+    
+    // Try to preload the audio
+    try {
+      console.log("Attempting to load audio from:", audioUrl);
+      audio.load();
+    } catch (loadError) {
+      console.error("Error during audio load:", loadError);
+      setError(`Failed to load audio: ${loadError}`);
+    }
     
     return () => {
       // Clean up
-      audio.pause();
-      audio.removeEventListener('canplaythrough', handleCanPlay);
-      audio.removeEventListener('error', handleError);
-      audioRef.current = null;
+      if (audio) {
+        audio.pause();
+        audio.removeEventListener('canplaythrough', handleCanPlay);
+        audio.removeEventListener('error', handleError);
+      }
     };
-  }, [audioUrl]);
+  }, [audioUrl, retryCount, fileExists]);
+
+  const retryLoading = useCallback(() => {
+    console.log("Retrying audio load...");
+    setRetryCount(prevCount => prevCount + 1);
+  }, []);
 
   const playSound = useCallback(() => {
     console.log("Attempting to play audio:", audioUrl);
     
-    if (audioRef.current && isLoaded) {
-      // Reset the audio to start
-      audioRef.current.currentTime = 0;
-      setIsPlaying(true);
-      
-      const playPromise = audioRef.current.play();
+    if (!audioRef.current) {
+      console.error('Audio element is null');
+      setError('Audio element was not created properly');
+      return;
+    }
+    
+    const audio = audioRef.current;
+    
+    // If we have an error or audio isn't loaded, try to reload
+    if (error || !isLoaded) {
+      console.log('Audio had errors or not loaded, retrying...');
+      retryLoading();
+      return;
+    }
+    
+    // Reset the audio to start
+    audio.currentTime = 0;
+    setIsPlaying(true);
+    
+    try {
+      const playPromise = audio.play();
       
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             console.log("Audio playback started successfully");
           })
-          .catch(error => {
-            console.error('Playback error:', error);
+          .catch(playError => {
+            console.error('Playback error:', playError);
             setIsPlaying(false);
             
-            // Common issue: browsers require user interaction before allowing audio to play
-            if (error.name === 'NotAllowedError') {
+            // Handle common errors
+            if (playError.name === 'NotAllowedError') {
               console.warn('Audio playback was not allowed. This often requires user interaction first.');
               setError('Audio playback requires user interaction first. Try clicking the button again.');
+            } else {
+              setError(`Failed to play audio: ${playError.message}`);
             }
           });
       }
-    } else if (!isLoaded && !error) {
-      console.log('Audio not loaded yet, trying to load and play');
-      // Try to reload audio if it's not loaded yet
-      if (audioRef.current) {
-        audioRef.current.load();
-        audioRef.current.oncanplaythrough = () => {
-          if (audioRef.current) {
-            audioRef.current.play()
-              .then(() => setIsPlaying(true))
-              .catch(err => console.error('Error playing audio after load:', err));
-          }
-        };
-      }
-    } else {
-      console.error('Cannot play audio: ', error || 'Audio not initialized');
+    } catch (e) {
+      console.error('Exception during play attempt:', e);
+      setIsPlaying(false);
+      setError(`Exception during playback: ${e}`);
     }
-  }, [audioUrl, isLoaded, error]);
+  }, [audioUrl, isLoaded, error, retryLoading]);
 
   return { 
     playSound,
     isLoaded,
     isPlaying,
-    error
+    error,
+    retryLoading,
+    fileExists
   };
 };

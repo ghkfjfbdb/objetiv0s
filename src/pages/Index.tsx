@@ -49,25 +49,32 @@ const PixelBolsonaro = () => (
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  const { playSound, isLoaded, error } = useAudio('/lula-feijao-puro.mp3');
+  const { playSound, isLoaded, error, retryLoading } = useAudio('/lula-feijao-puro.mp3');
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Only show the toggle after mounting to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Show error toast if audio fails to load
   useEffect(() => {
     if (error) {
+      console.log("Audio error detected:", error);
       toast({
         title: "Erro de áudio",
         description: error,
         variant: "destructive",
+        action: (
+          <button 
+            onClick={retryLoading} 
+            className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs"
+          >
+            Tentar novamente
+          </button>
+        ),
       });
     }
-  }, [error]);
+  }, [error, retryLoading]);
 
   const objetivos = [
     {
@@ -94,7 +101,17 @@ const Index = () => {
 
   const handleButtonClick = () => {
     console.log("Button clicked, attempting to play audio...");
-    playSound();
+    
+    if (!isLoaded && error) {
+      console.log("Audio not loaded, trying to reload first");
+      retryLoading();
+      setTimeout(() => {
+        playSound();
+      }, 500);
+    } else {
+      playSound();
+    }
+    
     setShowModal(true);
   };
 
