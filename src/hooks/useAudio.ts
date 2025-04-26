@@ -1,6 +1,6 @@
 
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { checkAudioFileExists } from '@/utils/audioChecker';
+import { checkAudioFileExists, suggestAudioPaths } from '@/utils/audioChecker';
 
 export const useAudio = (audioUrl: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -9,28 +9,70 @@ export const useAudio = (audioUrl: string) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [fileExists, setFileExists] = useState<boolean | null>(null);
+  const [triedPaths, setTriedPaths] = useState<string[]>([]);
+  const [currentPathIndex, setCurrentPathIndex] = useState(0);
+  
+  // Generate possible paths on first render
+  const [possiblePaths] = useState(() => {
+    // Extract base name without extension
+    const parts = audioUrl.split('.');
+    const ext = parts.pop() || 'mp3';
+    const baseName = parts.join('.');
+    
+    // If url already has extension, use as is plus alternatives
+    if (audioUrl.endsWith(`.${ext}`)) {
+      return [audioUrl, ...suggestAudioPaths(`${baseName}.${ext}`)];
+    }
+    
+    // If no extension, add it
+    return suggestAudioPaths(`${baseName}.${ext}`);
+  });
+  
+  const currentPath = possiblePaths[currentPathIndex];
 
   // Check if the file exists
   useEffect(() => {
     const checkFile = async () => {
-      console.log("Checking if audio file exists:", audioUrl);
-      const exists = await checkAudioFileExists(audioUrl);
-      console.log("Audio file exists:", exists);
-      setFileExists(exists);
+      if (!currentPath) {
+        setFileExists(false);
+        setError('No more paths to try');
+        return;
+      }
+
+      console.log(`Attempting path ${currentPathIndex + 1}/${possiblePaths.length}: ${currentPath}`);
+      const exists = await checkAudioFileExists(currentPath);
       
-      if (!exists) {
-        setError(`Audio file not found: ${audioUrl}`);
-        setIsLoaded(false);
+      if (exists) {
+        console.log(`Found audio at path: ${currentPath}`);
+        setFileExists(true);
+        setError(null);
+      } else {
+        setTriedPaths(prev => [...prev, currentPath]);
+        
+        // If we have more paths to try, try the next one
+        if (currentPathIndex < possiblePaths.length - 1) {
+          console.log(`Path failed, trying next path...`);
+          setCurrentPathIndex(prev => prev + 1);
+        } else {
+          // We've tried all paths
+          console.error('Audio file not found in any of the tried locations:', triedPaths);
+          setFileExists(false);
+          setError(`Audio file not found. Tried paths: ${triedPaths.join(', ')}`);
+        }
       }
     };
     
     checkFile();
-  }, [audioUrl, retryCount]);
+  }, [currentPath, currentPathIndex, possiblePaths, retryCount]);
 
   // Initialize the audio element outside of useEffect to ensure it's available
   useEffect(() => {
     if (fileExists === false) {
       return; // Don't try to load if file doesn't exist
+    }
+    
+    if (!currentPath) {
+      return; // No path to try
     }
 
     // Create audio element
@@ -45,7 +87,7 @@ export const useAudio = (audioUrl: string) => {
     
     // Set up event listeners
     const handleCanPlay = () => {
-      console.log("Audio loaded successfully:", audioUrl);
+      console.log("Audio loaded successfully:", currentPath);
       setIsLoaded(true);
       setError(null);
     };
@@ -56,7 +98,13 @@ export const useAudio = (audioUrl: string) => {
         ? `Error code: ${audio.error.code}, message: ${audio.error.message}` 
         : 'Unknown error';
       console.error('Audio load error:', errorMessage);
-      setError(`Failed to load audio: ${audioUrl}`);
+      
+      // Try next path if available
+      if (currentPathIndex < possiblePaths.length - 1) {
+        setCurrentPathIndex(prev => prev + 1);
+      } else {
+        setError(`Failed to load audio from path: ${currentPath}`);
+      }
       setIsLoaded(false);
     };
     
@@ -65,11 +113,11 @@ export const useAudio = (audioUrl: string) => {
     audio.addEventListener('error', handleError);
     
     // Set source with correct path
-    audio.src = audioUrl;
+    audio.src = currentPath;
     
     // Try to preload the audio
     try {
-      console.log("Attempting to load audio from:", audioUrl);
+      console.log("Attempting to load audio from:", currentPath);
       audio.load();
     } catch (loadError) {
       console.error("Error during audio load:", loadError);
@@ -84,15 +132,18 @@ export const useAudio = (audioUrl: string) => {
         audio.removeEventListener('error', handleError);
       }
     };
-  }, [audioUrl, retryCount, fileExists]);
+  }, [currentPath, retryCount, fileExists, currentPathIndex, possiblePaths]);
 
   const retryLoading = useCallback(() => {
     console.log("Retrying audio load...");
+    // Reset to first path
+    setCurrentPathIndex(0);
+    setTriedPaths([]);
     setRetryCount(prevCount => prevCount + 1);
   }, []);
 
   const playSound = useCallback(() => {
-    console.log("Attempting to play audio:", audioUrl);
+    console.log("Attempting to play audio:", currentPath);
     
     if (!audioRef.current) {
       console.error('Audio element is null');
@@ -139,7 +190,7 @@ export const useAudio = (audioUrl: string) => {
       setIsPlaying(false);
       setError(`Exception during playback: ${e}`);
     }
-  }, [audioUrl, isLoaded, error, retryLoading]);
+  }, [currentPath, isLoaded, error, retryLoading]);
 
   return { 
     playSound,
@@ -147,6 +198,8 @@ export const useAudio = (audioUrl: string) => {
     isPlaying,
     error,
     retryLoading,
-    fileExists
+    fileExists,
+    currentPath,
+    triedPaths
   };
 };

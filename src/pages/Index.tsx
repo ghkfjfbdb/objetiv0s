@@ -1,11 +1,14 @@
+
 import { useState, useEffect } from "react";
 import Countdown from "@/components/Countdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Copyright, Moon, Sun } from "lucide-react";
+import { Copyright, Moon, Sun, Volume2, VolumeX } from "lucide-react";
 import { useAudio } from "@/hooks/useAudio";
 import { Toggle } from "@/components/ui/toggle";
 import { useTheme } from "next-themes";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 const LulaImage = () => (
   <div className="flex justify-center py-4 animate-fade-in">
@@ -49,7 +52,16 @@ const PixelBolsonaro = () => (
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  const { playSound, isLoaded, error, retryLoading } = useAudio('/lula-feijao-puro.mp3');
+  const { 
+    playSound, 
+    isLoaded, 
+    error, 
+    retryLoading, 
+    fileExists, 
+    currentPath, 
+    triedPaths 
+  } = useAudio('lula-feijao-puro.mp3'); // Remove leading slash - let the hook try different paths
+  
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -136,6 +148,34 @@ const Index = () => {
       </div>
 
       <div className="max-w-3xl mx-auto space-y-8">
+        {/* Display audio status */}
+        {error && (
+          <Alert variant="destructive" className="animate-fadeIn">
+            <AlertTitle className="flex items-center">
+              <VolumeX className="mr-2" /> Problema com áudio
+            </AlertTitle>
+            <AlertDescription>
+              {error}
+              <div className="mt-2">
+                <Button size="sm" onClick={retryLoading} variant="outline">
+                  Tentar novamente
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {isLoaded && !error && (
+          <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+            <AlertTitle className="flex items-center text-green-800 dark:text-green-300">
+              <Volume2 className="mr-2" /> Áudio carregado
+            </AlertTitle>
+            <AlertDescription className="text-green-700 dark:text-green-400">
+              Audio está pronto para tocar do caminho: {currentPath}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="text-center">
           <h1 className="text-4xl font-bold text-foreground mb-4">
             Meus Objetivos para o Ano
