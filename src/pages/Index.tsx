@@ -57,10 +57,8 @@ const Index = () => {
     isLoaded, 
     error, 
     retryLoading, 
-    fileExists, 
-    currentPath, 
-    triedPaths 
-  } = useAudio('lula-feijao-puro.mp3'); // Remove leading slash - let the hook try different paths
+    audioPath 
+  } = useAudio('lula-feijao-puro.mp3');
   
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -71,7 +69,7 @@ const Index = () => {
 
   useEffect(() => {
     if (error) {
-      console.log("Audio error detected:", error);
+      console.log("Error de áudio detectado:", error);
       toast({
         title: "Erro de áudio",
         description: error,
@@ -112,10 +110,10 @@ const Index = () => {
   ];
 
   const handleButtonClick = () => {
-    console.log("Button clicked, attempting to play audio...");
+    console.log("Botão clicado, tentando reproduzir áudio...");
     
     if (!isLoaded && error) {
-      console.log("Audio not loaded, trying to reload first");
+      console.log("Áudio não carregado, tentando recarregar primeiro");
       retryLoading();
       setTimeout(() => {
         playSound();
@@ -148,7 +146,7 @@ const Index = () => {
       </div>
 
       <div className="max-w-3xl mx-auto space-y-8">
-        {/* Display audio status */}
+        {/* Exibir status do áudio */}
         {error && (
           <Alert variant="destructive" className="animate-fadeIn">
             <AlertTitle className="flex items-center">
@@ -171,7 +169,7 @@ const Index = () => {
               <Volume2 className="mr-2" /> Áudio carregado
             </AlertTitle>
             <AlertDescription className="text-green-700 dark:text-green-400">
-              Audio está pronto para tocar do caminho: {currentPath}
+              Áudio está pronto para tocar do caminho: {audioPath}
             </AlertDescription>
           </Alert>
         )}
@@ -210,7 +208,7 @@ const Index = () => {
           </ul>
         </div>
 
-        {/* Credits Section */}
+        {/* Seção de Créditos */}
         <div className="bg-card shadow rounded-lg p-6 text-center">
           <h2 className="text-2xl font-semibold text-foreground mb-4">
             Créditos
