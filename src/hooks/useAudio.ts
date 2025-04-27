@@ -23,9 +23,11 @@ export const useAudio = (audioFileName: string) => {
   // Additional paths to try if main path fails
   const alternativePaths = [
     audioPath,
-    audioPath.startsWith('/') ? audioPath.substring(1) : audioPath,
+    audioPath.replace('/lovable-uploads/', '/'),
     `/public${audioPath}`,
+    audioPath.startsWith('/') ? audioPath.substring(1) : audioPath,
     audioPath.startsWith('/') ? `/public${audioPath}` : `/public/${audioPath}`,
+    '/lula-feijao-puro.mp3',  // Try root path as last resort
   ];
   
   const handleLoad = useCallback(() => {
@@ -86,14 +88,29 @@ export const useAudio = (audioFileName: string) => {
       const audio = new Audio(path);
       audioRef.current = audio;
       
+      // Set timeout to detect loading stuck issues
+      const timeoutId = setTimeout(() => {
+        console.log(`Loading timed out for path: ${path}`);
+        tryLoadingFromPaths(pathsToTry, currentIndex + 1);
+      }, 3000);
+      
       // Use one-time event listener to try the next path if this one fails
       const errorHandler = () => {
         console.log(`Path failed: ${path}, trying next path...`);
+        clearTimeout(timeoutId);
         audio.removeEventListener('error', errorHandler);
+        audio.removeEventListener('canplaythrough', successHandler);
         tryLoadingFromPaths(pathsToTry, currentIndex + 1);
       };
+      
+      // Success handler
+      const successHandler = () => {
+        clearTimeout(timeoutId);
+        audio.removeEventListener('error', errorHandler);
+        handleLoad();
+      };
 
-      audio.addEventListener('canplaythrough', handleLoad);
+      audio.addEventListener('canplaythrough', successHandler);
       audio.addEventListener('error', errorHandler);
       audio.addEventListener('ended', handleEnd);
       

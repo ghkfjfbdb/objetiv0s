@@ -16,8 +16,8 @@ import LulaModal from "@/components/modals/LulaModal";
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  // Use the correct path with lovable-uploads folder
-  const { playSound, isLoaded, error, retryLoading, audioPath } = useAudio('/lovable-uploads/lula-feijao-puro.mp3');
+  // Try root path directly since other paths are failing
+  const { playSound, isLoaded, error, retryLoading, audioPath } = useAudio('/lula-feijao-puro.mp3');
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -27,7 +27,7 @@ const Index = () => {
 
   useEffect(() => {
     if (error) {
-      console.log("Error de áudio detectado:", error);
+      console.log("Erro de áudio detectado:", error);
       toast({
         title: "Erro de áudio",
         description: error,
