@@ -15,7 +15,10 @@ export const useAudio = (audioFileName: string) => {
     error: null,
   });
   
-  const audioPath = `/${audioFileName}`;
+  // Use full public path to ensure proper loading
+  const audioPath = audioFileName.startsWith('/') 
+    ? audioFileName 
+    : `/${audioFileName}`;
   
   const handleLoad = useCallback(() => {
     setState(prev => ({
@@ -23,7 +26,8 @@ export const useAudio = (audioFileName: string) => {
       isLoaded: true,
       error: null,
     }));
-  }, []);
+    console.log("Audio successfully loaded:", audioPath);
+  }, [audioPath]);
   
   const handleError = useCallback(() => {
     const audio = audioRef.current;
@@ -31,12 +35,14 @@ export const useAudio = (audioFileName: string) => {
       ? `Error loading audio: ${audio.error.message}`
       : 'Unknown audio loading error';
       
+    console.error("Audio loading error:", errorMessage, "for path:", audioPath);
+    
     setState(prev => ({
       ...prev,
       error: errorMessage,
       isLoaded: false,
     }));
-  }, []);
+  }, [audioPath]);
   
   const handleEnd = useCallback(() => {
     setState(prev => ({
@@ -46,48 +52,87 @@ export const useAudio = (audioFileName: string) => {
   }, []);
 
   useEffect(() => {
-    const audio = new Audio(audioPath);
-    audioRef.current = audio;
+    // Make sure we clean up any previous audio instance
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
     
-    audio.addEventListener('canplaythrough', handleLoad);
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('ended', handleEnd);
+    console.log("Attempting to load audio from path:", audioPath);
     
-    return () => {
-      audio.removeEventListener('canplaythrough', handleLoad);
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('ended', handleEnd);
-      audio.pause();
-    };
+    try {
+      const audio = new Audio(audioPath);
+      audioRef.current = audio;
+      
+      audio.addEventListener('canplaythrough', handleLoad);
+      audio.addEventListener('error', handleError);
+      audio.addEventListener('ended', handleEnd);
+      
+      // Attempt to preload
+      audio.load();
+      
+      return () => {
+        audio.removeEventListener('canplaythrough', handleLoad);
+        audio.removeEventListener('error', handleError);
+        audio.removeEventListener('ended', handleEnd);
+        audio.pause();
+      };
+    } catch (err) {
+      console.error("Error creating audio element:", err);
+      setState(prev => ({
+        ...prev,
+        error: `Error creating audio element: ${err instanceof Error ? err.message : String(err)}`,
+        isLoaded: false,
+      }));
+    }
   }, [audioPath, handleLoad, handleError, handleEnd]);
   
   const playSound = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      console.error("Cannot play sound: Audio element not initialized");
+      return;
+    }
     
     audio.currentTime = 0;
     setState(prev => ({ ...prev, isPlaying: true }));
     
+    console.log("Attempting to play audio:", audioPath);
+    
     audio.play().catch(err => {
+      console.error("Error playing audio:", err);
       setState(prev => ({
         ...prev,
         error: `Error playing audio: ${err.message}`,
         isPlaying: false,
       }));
     });
-  }, []);
+  }, [audioPath]);
   
   const retryLoading = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      console.log("Recreating audio element for retry");
+      const newAudio = new Audio(audioPath);
+      audioRef.current = newAudio;
+      
+      newAudio.addEventListener('canplaythrough', handleLoad);
+      newAudio.addEventListener('error', handleError);
+      newAudio.addEventListener('ended', handleEnd);
+    }
+    
+    console.log("Retrying audio load from path:", audioPath);
     
     setState(prev => ({
       ...prev,
       error: null,
       isLoaded: false,
     }));
-    audio.load();
-  }, []);
+    
+    if (audioRef.current) {
+      audioRef.current.load();
+    }
+  }, [audioPath, handleLoad, handleError, handleEnd]);
   
   return {
     playSound,
