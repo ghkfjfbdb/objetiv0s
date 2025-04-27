@@ -1,33 +1,53 @@
 
 import { useCallback, useRef, useState, useEffect } from 'react';
 
+interface AudioState {
+  isLoaded: boolean;
+  isPlaying: boolean;
+  error: string | null;
+}
+
 export const useAudio = (audioFileName: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<AudioState>({
+    isLoaded: false,
+    isPlaying: false,
+    error: null,
+  });
   
-  // Use public folder path
   const audioPath = `/${audioFileName}`;
   
+  const handleLoad = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      isLoaded: true,
+      error: null,
+    }));
+  }, []);
+  
+  const handleError = useCallback(() => {
+    const audio = audioRef.current;
+    const errorMessage = audio?.error 
+      ? `Error loading audio: ${audio.error.message}`
+      : 'Unknown audio loading error';
+      
+    setState(prev => ({
+      ...prev,
+      error: errorMessage,
+      isLoaded: false,
+    }));
+  }, []);
+  
+  const handleEnd = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      isPlaying: false,
+    }));
+  }, []);
+
   useEffect(() => {
     const audio = new Audio(audioPath);
     audioRef.current = audio;
-    
-    const handleLoad = () => {
-      setIsLoaded(true);
-      setError(null);
-    };
-    
-    const handleError = () => {
-      const errorMessage = audio.error 
-        ? `Error loading audio: ${audio.error.message}`
-        : 'Unknown audio loading error';
-      setError(errorMessage);
-      setIsLoaded(false);
-    };
-    
-    const handleEnd = () => setIsPlaying(false);
     
     audio.addEventListener('canplaythrough', handleLoad);
     audio.addEventListener('error', handleError);
@@ -39,18 +59,21 @@ export const useAudio = (audioFileName: string) => {
       audio.removeEventListener('ended', handleEnd);
       audio.pause();
     };
-  }, [audioPath]);
+  }, [audioPath, handleLoad, handleError, handleEnd]);
   
   const playSound = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
     
     audio.currentTime = 0;
-    setIsPlaying(true);
+    setState(prev => ({ ...prev, isPlaying: true }));
     
     audio.play().catch(err => {
-      setError(`Error playing audio: ${err.message}`);
-      setIsPlaying(false);
+      setState(prev => ({
+        ...prev,
+        error: `Error playing audio: ${err.message}`,
+        isPlaying: false,
+      }));
     });
   }, []);
   
@@ -58,15 +81,20 @@ export const useAudio = (audioFileName: string) => {
     const audio = audioRef.current;
     if (!audio) return;
     
+    setState(prev => ({
+      ...prev,
+      error: null,
+      isLoaded: false,
+    }));
     audio.load();
   }, []);
   
   return {
     playSound,
-    isLoaded,
-    isPlaying,
-    error,
+    isLoaded: state.isLoaded,
+    isPlaying: state.isPlaying,
+    error: state.error,
     retryLoading,
-    audioPath
+    audioPath,
   };
 };
