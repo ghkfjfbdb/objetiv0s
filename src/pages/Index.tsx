@@ -19,7 +19,7 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   
-  // Use the correct path to the audio file
+  // Use o nome do arquivo sem caminho - o hook tentará vários caminhos
   const { playSound, isLoaded, error, retryLoading, audioPath } = useAudio('lula-feijao-puro.mp3');
 
   useEffect(() => {
@@ -47,17 +47,7 @@ const Index = () => {
 
   const handleButtonClick = () => {
     console.log("Botão clicado, tentando reproduzir áudio...");
-    
-    if (!isLoaded && error) {
-      console.log("Áudio não carregado, tentando recarregar primeiro");
-      retryLoading();
-      setTimeout(() => {
-        playSound();
-      }, 500);
-    } else {
-      playSound();
-    }
-    
+    playSound();
     setShowModal(true);
   };
 
