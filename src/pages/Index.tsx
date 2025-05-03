@@ -16,10 +16,11 @@ import LulaModal from "@/components/modals/LulaModal";
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  // Use caminho para a pasta lovable-uploads
-  const { playSound, isLoaded, error, retryLoading, audioPath } = useAudio('lula-feijao-puro.mp3');
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  
+  // Use the correct path to the audio file
+  const { playSound, isLoaded, error, retryLoading, audioPath } = useAudio('lula-feijao-puro.mp3');
 
   useEffect(() => {
     setMounted(true);
