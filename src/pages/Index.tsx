@@ -16,8 +16,8 @@ import LulaModal from "@/components/modals/LulaModal";
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
-  // Try root path directly since other paths are failing
-  const { playSound, isLoaded, error, retryLoading, audioPath } = useAudio('/lula-feijao-puro.mp3');
+  // Try with a simpler path approach
+  const { playSound, isLoaded, error, retryLoading, audioPath } = useAudio('lula-feijao-puro.mp3');
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
