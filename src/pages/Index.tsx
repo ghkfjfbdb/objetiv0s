@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "next-themes";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast"; // Corrected import path
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -19,7 +19,7 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   
-  // Use o nome do arquivo sem caminho - o hook tentará vários caminhos
+  // Fixed audio path - ensure the file name matches exactly
   const { playSound, isLoaded, error, retryLoading, audioPath } = useAudio('lula-feijao-puro.mp3');
 
   useEffect(() => {

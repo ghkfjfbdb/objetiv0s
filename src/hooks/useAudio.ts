@@ -1,190 +1,98 @@
 
-import { useCallback, useRef, useState, useEffect } from 'react';
-
-interface AudioState {
-  isLoaded: boolean;
-  isPlaying: boolean;
-  error: string | null;
-}
+import { useState, useEffect, useCallback } from 'react';
 
 export const useAudio = (audioFileName: string) => {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [state, setState] = useState<AudioState>({
-    isLoaded: false,
-    isPlaying: false,
-    error: null,
-  });
-
-  // Tenta diferentes caminhos para o áudio
-  const paths = [
-    `/lovable-uploads/${audioFileName}`,
-    `/${audioFileName}`,
-    `/public/lovable-uploads/${audioFileName}`,
-    `/public/${audioFileName}`,
-  ];
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Armazena o caminho atual
-  const [currentPathIndex, setCurrentPathIndex] = useState(0);
-  const audioPath = paths[currentPathIndex];
+  // Simplify - just use one consistent path format
+  const audioPath = `/lovable-uploads/${audioFileName}`;
   
-  // Handle successful audio loading
-  const handleLoad = useCallback(() => {
-    console.log("✅ Áudio carregado com sucesso:", audioPath);
-    setState(prev => ({
-      ...prev,
-      isLoaded: true,
-      error: null,
-    }));
+  useEffect(() => {
+    // Create audio element
+    const audioElement = new Audio();
+    setAudio(audioElement);
+    
+    // Set up event handlers
+    const handleCanPlay = () => {
+      console.log("✅ Áudio carregado com sucesso:", audioPath);
+      setIsLoaded(true);
+      setError(null);
+    };
+    
+    const handleError = () => {
+      console.error("❌ Erro ao carregar áudio:", audioPath);
+      setError("Não foi possível carregar o áudio. Por favor, verifique o caminho do arquivo.");
+      setIsLoaded(false);
+    };
+    
+    const handleEnded = () => {
+      setIsPlaying(false);
+    };
+    
+    // Add event listeners
+    audioElement.addEventListener('canplaythrough', handleCanPlay);
+    audioElement.addEventListener('error', handleError);
+    audioElement.addEventListener('ended', handleEnded);
+    
+    // Set source and load
+    audioElement.src = audioPath;
+    audioElement.load();
+    
+    // Cleanup
+    return () => {
+      audioElement.pause();
+      audioElement.removeEventListener('canplaythrough', handleCanPlay);
+      audioElement.removeEventListener('error', handleError);
+      audioElement.removeEventListener('ended', handleEnded);
+    };
   }, [audioPath]);
   
-  // Handle audio loading errors
-  const handleError = useCallback(() => {
-    console.error(`❌ Erro ao carregar áudio do caminho ${currentPathIndex + 1}/${paths.length}:`, audioPath);
-    
-    // Tenta o próximo caminho se disponível
-    if (currentPathIndex < paths.length - 1) {
-      console.log("🔄 Tentando próximo caminho...");
-      setCurrentPathIndex(prev => prev + 1);
-    } else {
-      setState(prev => ({
-        ...prev,
-        error: "Não foi possível carregar o áudio. Por favor, tente novamente.",
-        isLoaded: false,
-      }));
-    }
-  }, [audioPath, currentPathIndex, paths.length]);
-  
-  // Handle audio playback end
-  const handleEnd = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      isPlaying: false,
-    }));
-  }, []);
-
-  // Initialize audio when component mounts or path changes
-  useEffect(() => {
-    // Cleanup previous audio instance
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.removeEventListener('canplaythrough', handleLoad);
-      audioRef.current.removeEventListener('error', handleError);
-      audioRef.current.removeEventListener('ended', handleEnd);
-    }
-
-    try {
-      console.log("🔄 Tentando carregar áudio de:", audioPath);
-      const audio = new Audio();
-      audio.preload = "auto";
-      
-      // Configurar eventos antes de definir a fonte
-      audio.addEventListener('canplaythrough', handleLoad);
-      audio.addEventListener('error', handleError);
-      audio.addEventListener('ended', handleEnd);
-      
-      audioRef.current = audio;
-      
-      // Definir a fonte DEPOIS de configurar os eventos
-      audio.src = audioPath;
-      
-      // Iniciar carregamento explicitamente
-      audio.load();
-    } catch (err) {
-      console.error("❌ Erro ao criar elemento de áudio:", err);
-      setState(prev => ({
-        ...prev,
-        error: "Erro ao inicializar o reprodutor de áudio",
-        isLoaded: false,
-      }));
-    }
-    
-    // Cleanup function
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeEventListener('canplaythrough', handleLoad);
-        audioRef.current.removeEventListener('error', handleError);
-        audioRef.current.removeEventListener('ended', handleEnd);
-      }
-    };
-  }, [audioPath, handleLoad, handleError, handleEnd]);
-  
-  // Function to play the audio
+  // Play sound function
   const playSound = useCallback(() => {
-    const audio = audioRef.current;
     if (!audio) {
-      console.error("❌ Não é possível reproduzir o som: Elemento de áudio não inicializado");
+      console.error("❌ Áudio não inicializado");
       return;
     }
     
-    // Se o áudio não estiver carregado, tentamos novamente
-    if (!state.isLoaded) {
+    if (!isLoaded) {
       console.log("🔄 Áudio não carregado, tentando novamente...");
       audio.load();
-      
-      // Adiciona um ouvinte temporário para reproduzir após o carregamento
-      const onceLoadHandler = () => {
-        audio.play().catch(err => {
-          console.error("❌ Erro ao reproduzir áudio após carregamento:", err);
-          setState(prev => ({
-            ...prev,
-            error: `Erro ao reproduzir áudio: ${err.message}`,
-            isPlaying: false,
-          }));
-        });
-        audio.removeEventListener('canplaythrough', onceLoadHandler);
-      };
-      audio.addEventListener('canplaythrough', onceLoadHandler);
+      setError("Áudio ainda está carregando. Tente novamente em alguns instantes.");
       return;
     }
     
-    // Reset audio position
+    // Reset audio position and play
     audio.currentTime = 0;
-    setState(prev => ({ ...prev, isPlaying: true }));
+    setIsPlaying(true);
     
-    console.log("▶️ Tentando reproduzir áudio:", audioPath);
-    
-    // Play the audio with proper error handling
     audio.play().catch(err => {
       console.error("❌ Erro ao reproduzir áudio:", err);
-      setState(prev => ({
-        ...prev,
-        error: `Erro ao reproduzir áudio: ${err.message}`,
-        isPlaying: false,
-      }));
+      setError(`Erro ao reproduzir áudio: ${err.message}`);
+      setIsPlaying(false);
     });
-  }, [audioPath, state.isLoaded]);
+  }, [audio, isLoaded]);
   
-  // Function to retry loading the audio
+  // Retry loading
   const retryLoading = useCallback(() => {
+    if (!audio) return;
+    
     console.log("🔄 Tentando carregar áudio novamente...");
-    setState(prev => ({
-      ...prev,
-      error: null,
-      isLoaded: false,
-    }));
+    setError(null);
+    setIsLoaded(false);
     
-    // Reiniciar o índice do caminho
-    setCurrentPathIndex(0);
-    
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.removeEventListener('canplaythrough', handleLoad);
-      audioRef.current.removeEventListener('error', handleError);
-      audioRef.current.removeEventListener('ended', handleEnd);
-      
-      // Definir nova fonte e tentar carregar
-      audioRef.current.src = paths[0];
-      audioRef.current.load();
-    }
-  }, [handleLoad, handleError, handleEnd, paths]);
+    audio.src = audioPath;
+    audio.load();
+  }, [audio, audioPath]);
   
   return {
     playSound,
-    isLoaded: state.isLoaded,
-    isPlaying: state.isPlaying,
-    error: state.error,
+    isLoaded,
+    isPlaying,
+    error,
     retryLoading,
-    audioPath,
+    audioPath
   };
 };
